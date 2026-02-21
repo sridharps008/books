@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Simple PDF Viewer</title>
+
+<style>
+body {
+    font-family: Arial;
+    margin: 0;
+    background: #f4f4f4;
+    text-align: center;
+}
+
+.container {
+    width: 95%;
+    margin: 10px auto;
+}
+
+select {
+    padding: 8px;
+    margin-bottom: 10px;
+}
+
+iframe {
+    width: 100%;
+    height: 90vh;
+    border: 1px solid #ccc;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Embedded PDF Viewer</h2>
+
+    <select id="pdfSelect">
+        <option value="file1.pdf">The Alchemist</option>
+        <option value="file2.pdf">#1 The Red Dragon</option>
+        <option value="file3.pdf">#2 Silence Of The Lambs</option>
+        <option value="file4.pdf">#3 Hannibal</option>
+        <option value="file5.pdf">#4 Hannibal Rising</option>
+
+
+    </select>
+
+    <iframe id="pdfViewer" src="file1.pdf"></iframe>
+</div>
+
+<script>
+const select = document.getElementById("pdfSelect");
+const viewer = document.getElementById("pdfViewer");
+
+select.addEventListener("change", function() {
+    viewer.src = this.value;
+});
+</script>
+
+</body>
+</html>s
