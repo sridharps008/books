@@ -3,16 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Advanced PDF Viewer</title>
+<title>PDF Viewer</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
 <style>
 body {
     margin: 0;
-    font-family: Arial;
+    font-family: Arial, sans-serif;
     display: flex;
     height: 100vh;
+    background: #f4f6f9;
 }
 
 .sidebar {
@@ -20,12 +21,22 @@ body {
     overflow-y: auto;
     border-right: 1px solid #ccc;
     background: #fafafa;
+    padding: 5px;
+    transition: width 0.3s;
+}
+
+.sidebar.hidden {
+    width: 0;
+    padding: 0;
+    overflow: hidden;
 }
 
 .thumbnail {
     width: 100%;
     cursor: pointer;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
 }
 
 .main {
@@ -36,30 +47,34 @@ body {
 
 .controls {
     padding: 10px;
-    background: #f4f4f4;
+    background: #fff;
     text-align: center;
+    border-bottom: 1px solid #ddd;
+}
+
+button, input, select {
+    margin: 5px;
+    padding: 6px 10px;
 }
 
 canvas {
     margin: auto;
     max-width: 100%;
-}
-
-button, input, select {
-    margin: 5px;
-    padding: 6px;
+    border: 1px solid #ccc;
 }
 </style>
 </head>
 
 <body>
 
-<div class="sidebar" id="thumbnails"></div>
+<div class="sidebar" id="sidebar"></div>
 
 <div class="main">
     <div class="controls">
+        <button id="toggleSidebar">☰ Thumbnails</button>
+
         <select id="pdfSelector">
-            <option value="file1.pdf">The Alchemist</option>
+             <option value="file1.pdf">The Alchemist</option>
             <option value="file2.pdf">Red Dragon</option>
             <option value="file3.pdf">The silence of the Lambs</option>
             <option value="file4.pdf">Hannibal</option>
@@ -68,20 +83,17 @@ button, input, select {
             <option value="file7.pdf">The Girl Next Door</option>
             <option value="file8.pdf">A Story of Yesterday</option>
             <option value="file9.pdf">Problems in General Physics-IE Irodov</option>
-
-            
-
         </select>
 
         <br>
 
         <button id="prev">Prev</button>
-        <span>Page <span id="page_num"></span> / <span id="page_count"></span></span>
+        Page <span id="page_num"></span> / <span id="page_count"></span>
         <button id="next">Next</button>
 
         <br>
 
-        <input type="number" id="page_input" placeholder="Go to page" min="1">
+        <input type="number" id="page_input" placeholder="Go to page">
         <button id="go_page">Go</button>
 
         <button id="zoom_in">Zoom +</button>
@@ -94,7 +106,7 @@ button, input, select {
 <script>
 const canvas = document.getElementById('pdf-render');
 const ctx = canvas.getContext('2d');
-const thumbnailsContainer = document.getElementById('thumbnails');
+const sidebar = document.getElementById('sidebar');
 
 let pdfDoc = null,
     pageNum = 1,
@@ -108,6 +120,7 @@ function renderPage(num) {
 
     pdfDoc.getPage(num).then(page => {
         const viewport = page.getViewport({ scale });
+
         canvas.height = viewport.height;
         canvas.width = viewport.width;
 
@@ -116,6 +129,7 @@ function renderPage(num) {
             viewport: viewport
         }).promise.then(() => {
             pageIsRendering = false;
+
             if (pageNumPending !== null) {
                 renderPage(pageNumPending);
                 pageNumPending = null;
@@ -150,7 +164,7 @@ document.getElementById('next').onclick = () => {
 
 // Go to page
 document.getElementById('go_page').onclick = () => {
-    let page = parseInt(document.getElementById('page_input').value);
+    const page = parseInt(document.getElementById('page_input').value);
     if (page >= 1 && page <= pdfDoc.numPages) {
         pageNum = page;
         queueRenderPage(pageNum);
@@ -173,9 +187,14 @@ document.getElementById('zoom_out').onclick = () => {
     renderPage(pageNum);
 };
 
+// Toggle sidebar
+document.getElementById('toggleSidebar').onclick = () => {
+    sidebar.classList.toggle('hidden');
+};
+
 // Load PDF
 function loadPDF(url) {
-    thumbnailsContainer.innerHTML = "";
+    sidebar.innerHTML = "";
 
     pdfjsLib.getDocument({
         url: url,
@@ -186,36 +205,33 @@ function loadPDF(url) {
 
         renderPage(pageNum);
 
-        // Generate thumbnails
+        // Thumbnails
         for (let i = 1; i <= pdf.numPages; i++) {
             pdf.getPage(i).then(page => {
                 const viewport = page.getViewport({ scale: 0.2 });
 
-                let thumbCanvas = document.createElement('canvas');
-                let thumbCtx = thumbCanvas.getContext('2d');
+                let thumb = document.createElement('canvas');
+                let tctx = thumb.getContext('2d');
 
-                thumbCanvas.width = viewport.width;
-                thumbCanvas.height = viewport.height;
+                thumb.width = viewport.width;
+                thumb.height = viewport.height;
 
-                page.render({
-                    canvasContext: thumbCtx,
-                    viewport: viewport
-                });
+                page.render({ canvasContext: tctx, viewport });
 
-                thumbCanvas.classList.add('thumbnail');
+                thumb.classList.add('thumbnail');
 
-                thumbCanvas.onclick = () => {
+                thumb.onclick = () => {
                     pageNum = i;
                     renderPage(pageNum);
                 };
 
-                thumbnailsContainer.appendChild(thumbCanvas);
+                sidebar.appendChild(thumb);
             });
         }
     });
 }
 
-// Switch PDF
+// Change PDF
 document.getElementById('pdfSelector').onchange = (e) => {
     pageNum = 1;
     loadPDF(e.target.value);
