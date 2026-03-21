@@ -16,6 +16,21 @@ body {
     background: #f4f6f9;
 }
 
+/* Loading Screen */
+#loader {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+/* Sidebar */
 .sidebar {
     width: 120px;
     overflow-y: auto;
@@ -36,15 +51,16 @@ body {
     cursor: pointer;
     margin-bottom: 8px;
     border: 1px solid #ddd;
-    border-radius: 4px;
 }
 
+/* Main */
 .main {
     flex: 1;
     display: flex;
     flex-direction: column;
 }
 
+/* Controls */
 .controls {
     padding: 10px;
     background: #fff;
@@ -67,6 +83,8 @@ canvas {
 
 <body>
 
+<div id="loader">Loading PDF...</div>
+
 <div class="sidebar" id="sidebar"></div>
 
 <div class="main">
@@ -74,7 +92,7 @@ canvas {
         <button id="toggleSidebar">☰ Thumbnails</button>
 
         <select id="pdfSelector">
-             <option value="file1.pdf">The Alchemist</option>
+            <option value="file1.pdf">The Alchemist</option>
             <option value="file2.pdf">Red Dragon</option>
             <option value="file3.pdf">The silence of the Lambs</option>
             <option value="file4.pdf">Hannibal</option>
@@ -107,12 +125,23 @@ canvas {
 const canvas = document.getElementById('pdf-render');
 const ctx = canvas.getContext('2d');
 const sidebar = document.getElementById('sidebar');
+const loader = document.getElementById('loader');
 
 let pdfDoc = null,
     pageNum = 1,
     scale = 1.2,
     pageIsRendering = false,
     pageNumPending = null;
+
+// Show loader
+function showLoader() {
+    loader.style.display = "flex";
+}
+
+// Hide loader
+function hideLoader() {
+    loader.style.display = "none";
+}
 
 // Render page
 function renderPage(num) {
@@ -194,6 +223,7 @@ document.getElementById('toggleSidebar').onclick = () => {
 
 // Load PDF
 function loadPDF(url) {
+    showLoader();
     sidebar.innerHTML = "";
 
     pdfjsLib.getDocument({
@@ -205,7 +235,7 @@ function loadPDF(url) {
 
         renderPage(pageNum);
 
-        // Thumbnails
+        // Generate thumbnails
         for (let i = 1; i <= pdf.numPages; i++) {
             pdf.getPage(i).then(page => {
                 const viewport = page.getViewport({ scale: 0.2 });
@@ -228,6 +258,8 @@ function loadPDF(url) {
                 sidebar.appendChild(thumb);
             });
         }
+
+        hideLoader(); // Hide after loading
     });
 }
 
